@@ -65,28 +65,31 @@ function plugin:access(plugin_conf)
 
   local req_headers = kong.request.get_headers()
 
-  -- Check if the request headers match the configured headers
-  --
-  -- Every header in a rule must be present in a request header
-  -- Otherwise, the match for this rule does not occur
-  -- The routing for the upstream for this particular rule will not happen
-
-  local match
+  local match, upstream
+  local match_before, match_now = -1
 
   for _, rule in ipairs(plugin_conf.rules) do
     match = true
+    match_now = 0
 
     for rule_header_name, rule_header_value in pairs(rule.headers) do
       if req_headers[rule_header_name] ~= rule_header_value then
         match = false
         break
       end
+      match_now = match_now + 1
     end
 
     if match then
-      kong.service.set_upstream(rule.upstream_name)
-      break
+      upstream = match_now <= match_before and upstream or rule.upstream_name
+      match_before = match_now
     end
+  end
+
+  kong.log.inspect(upstream)
+
+  if upstream then
+    kong.service.set_upstream(upstream)
   end
 end --]]
 

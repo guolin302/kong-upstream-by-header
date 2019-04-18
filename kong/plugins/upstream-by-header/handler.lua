@@ -63,15 +63,31 @@ end --]]
 function plugin:access(plugin_conf)
   plugin.super.access(self)
 
-  local headers = kong.request.get_headers()
-  kong.log.inspect(headers)
+  local req_headers = kong.request.get_headers()
 
-  --for k, v in ipairs(plugin_conf.rules) do
-  --  for name, value in pairs(v) do
-  --    kong.log.inspect(name, value)
-  --  end
-  --end
-  ngx.req.set_header("Hello-World", "this is on a request")
+  -- Check if the request headers match the configured headers
+  --
+  -- Every header in a rule must be present in a request header
+  -- Otherwise, the match for this rule does not occur
+  -- The routing for the upstream for this particular rule will not happen
+
+  local match
+
+  for _, rule in ipairs(plugin_conf.rules) do
+    match = true
+
+    for rule_header_name, rule_header_value in pairs(rule.headers) do
+      if req_headers[rule_header_name] ~= rule_header_value then
+        match = false
+        break
+      end
+    end
+
+    if match then
+      kong.service.set_upstream(rule.upstream_name)
+      break
+    end
+  end
 end --]]
 
 ---[[ runs in the 'header_filter_by_lua_block'

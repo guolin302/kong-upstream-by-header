@@ -52,7 +52,9 @@ before_install:
   - sudo .ci/setup_env.sh
 
 install:
+  - cd ../
   - luarocks make
+  - cd kong-ce
   - make dev
   - cp -r ../spec/fixtures/prometheus spec/fixtures/
   - createuser --createdb kong

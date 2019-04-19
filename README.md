@@ -57,3 +57,6 @@ $ http :8001/services/europe/plugins name=upstream-by-header config:='{"rules": 
 Requests that match route `/local` will be proxied to Upstream `europe_cluster`, except
 requests that contain the header (X-Country, Italy) which should be proxied to Upstream
 italy_cluster.
+
+## TODO
+- We're exposing the upstream name in `X-Upstream-Name` to make integration testing easier; ideally such information should not be exposed to clients.

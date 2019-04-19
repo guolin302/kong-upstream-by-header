@@ -60,3 +60,4 @@ italy_cluster.
 
 ## TODO
 - We're exposing the upstream name in `X-Upstream-Name` to make integration testing easier; ideally such information should not be exposed to clients.
+- The time complexity for the header matching algorithm could potentially be optimzed with some hashing technique. Currently, it is O(r * h), where `r` is the number of rules and `h` is the number of headers for each rule.

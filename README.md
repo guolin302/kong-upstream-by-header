@@ -1,7 +1,7 @@
 Kong Plugin: upstream-by-header
 ====================
 
-This is a Kong plugin that sends requests to different upstreams when the request headers match one of the configured headers.
+This is a Kong plugin that proxies requests to different upstreams when the request headers match one of the configured headers.
 
 ## Usage
 
@@ -12,6 +12,48 @@ upstream-by-header sends a request to a different upstream if its headers match 
 | `headers` |  List of (name, value) pairs |
 | `upstream_name` |  Upstream hostname where the request will be sent to if the request headers match one of the `headers` |
 
-For each request coming into Kong, the plugin will try to find a rule where all the headers defined in the condition field have the same value as in the incoming request. The first such match dictates the upstream to which the request is forwarded to.
-
 The first match between the headers of a request and the headers of a rule will make the plugin route the request to the `upstream_name` configured for this rule. The plugin considers a match to happen when all the headers for a configured rule are contained in the request headers.
+
+## Example
+
+The following commands show examples of the plugin's functionality. All requests were made with [HTTPie](https://httpie.org).
+
+Create a Service:
+
+```bash
+$ http :8001/services host=europe_cluster name=europe
+```
+
+Create a Route associated with the `europe` Service:
+
+```bash
+$ http :8001/services/europe/routes  paths:='["/local"]'
+```
+
+Create an Upstream with the same hostname as the Service `europe`:
+
+```bash
+$ http :8001/upstreams name=europe_cluster
+```
+
+Create a Target associated with the `europe_cluster` Upstream:
+
+```bash
+$ http :8001/upstreams/europe_cluster/targets target=mockbin.org:80
+```
+
+Create another Upstream to get requests different than requests made to `europe_cluster`:
+
+```bash
+$ http :8001/upstreams name=italy_cluster
+```
+
+Apply the plugin on the `europe` Service to send requests with the header `(X-Country, Italy)` to the Upstream `europe_cluster` and requests with the headers `(X-Country, Italy)` and `(X-Regione, Abruzzo)` to the Upstream `italy_cluster`:
+
+```bash
+$ http :8001/services/europe/plugins name=upstream-by-header config:='{"rules": [{"headers": {"X-Country":"Italy"}, "upstream_name": "europe_cluster"}, {"headers": {"X-Country": "Italy", "X-Regione": "Abruzzo"}, "upstream_name": "italy_cluster"}]}'
+```
+
+Requests that match route `/local` will be proxied to Upstream `europe_cluster`, except
+requests that contain the header (X-Country, Italy) which should be proxied to Upstream
+italy_cluster.

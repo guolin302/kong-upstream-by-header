@@ -48,11 +48,11 @@ env:
 
 before_install:
   - git clone https://github.com/Kong/kong.git kong-ce
-  - source kong-ce/.ci/setup_env.sh
+  - cd kong-ce/
+  - sudo .ci/setup_env.sh
 
 install:
   - luarocks make
-  - cd kong-ce
   - make dev
   - cp -r ../spec/fixtures/prometheus spec/fixtures/
   - createuser --createdb kong

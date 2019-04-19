@@ -56,6 +56,7 @@ describe("Plugin: upstream-by-header (schema)", function()
     local config = nil
     local ok, err = v(config, schema_def)
     assert.falsy(ok)
+    assert.equal("required field missing", err.config.rules)
   end)
 
   it("validates required `rules` field", function()

@@ -11,9 +11,8 @@ for _, strategy in helpers.each_strategy() do
     local client
 
     lazy_setup(function()
-      local bp
-      local upstream1
-      local service1
+      local bp, service1
+      local upstream1, upstream2, upstream3, upstream4, upstream5, upstream6
 
       if KONG_VERSION >= version("0.15.0") then
         --
@@ -25,16 +24,64 @@ for _, strategy in helpers.each_strategy() do
           name = "europe_cluster",
         })
 
+        upstream2 = bp.upstreams:insert({
+          name = "italy_cluster",
+        })
+
+        upstream3 = bp.upstreams:insert({
+          name = "rome_cluster",
+        })
+
+        upstream4 = bp.upstreams:insert({
+          name = "brazil_cluster",
+        })
+
+        upstream5 = bp.upstreams:insert({
+          name = "italy_cache_cluster",
+        })
+
+        upstream6 = bp.upstreams:insert({
+          name = "us_cluster",
+        })
+
         bp.targets:insert({
           upstream = upstream1,
           target = "mockbin.org:80",
         })
 
+        bp.targets:insert({
+          upstream = upstream2,
+          target = "httpbin.org:80",
+        })
+
+        bp.targets:insert({
+          upstream = upstream3,
+          target = "example.com:80",
+        })
+
+        bp.targets:insert({
+          upstream = upstream4,
+          target = "example.org:80",
+        })
+
+        bp.targets:insert({
+          upstream = upstream5,
+          target = "mockbin.org:80",
+        })
+
+        bp.targets:insert({
+          upstream = upstream6,
+          target = "mockbin.org:80",
+        })
+
+        -- default: requests to service1 will be sent to europe_cluster
         service1 = bp.services:insert({
           name = "service1",
           host = "europe_cluster",
+          protocol = "http",
         })
 
+        -- requests that match route "/local" will be proxied to europe_cluster
         bp.routes:insert({
           paths = { "/local", },
           service = service1,
@@ -49,6 +96,40 @@ for _, strategy in helpers.each_strategy() do
                   ["X-Country"] = "Italy",
                 },
                 upstream_name = "europe_cluster",
+              },
+              {
+                headers = {
+                  ["X-Country"] = "Italy",
+                  ["X-Regione"] = "Abruzzo",
+                },
+                upstream_name = "italy_cluster",
+              },
+              {
+                headers = {
+                  ["X-Country"] = "Italy",
+                  ["X-Regione"] = "Rome",
+                },
+                upstream_name = "rome_cluster",
+              },
+              {
+                headers = {
+                  ["X-Country"] = "Brazil",
+                  ["X-Regione"] = "Goiania",
+                },
+                upstream_name = "brazil_cluster",
+              },
+              {
+                headers = {
+                  ["X-Country"] = "Italy",
+                  ["Connection"] = "close",
+                },
+                upstream_name = "italy_cache_cluster",
+              },
+              {
+                headers = {
+                  ["Accept-Language"] = "en-us",
+                },
+                upstream_name = "us_cluster",
               },
             },
           },
@@ -139,14 +220,14 @@ for _, strategy in helpers.each_strategy() do
 
 
 
-    describe("response", function()
-      it("gets the correct upstream name in the response header", function()
+    describe("Upstream response", function()
+      it("checks if request with {X-Country = Italy} only must match rule with {X-Country = Italy} only", function()
         local r = assert(client:send {
           method = "GET",
           path = "/local",
           headers = {
             ["X-Country"] = "Italy",
-          }
+          },
         })
         -- validate that the request succeeded, response status 200
         assert.response(r).has.status(200)
@@ -155,6 +236,90 @@ for _, strategy in helpers.each_strategy() do
         -- validate the value of that header
         assert.equal("europe_cluster", header_value)
       end)
+
+      it("checks if request with {X-Country = Italy, X-Regione = Abruzzo} matches rule with {X-Country = Italy, X-Regione = Abruzzo}", function()
+        local r = assert(client:send {
+          method = "GET",
+          path = "/local",
+          headers = {
+            ["X-Country"] = "Italy",
+            ["X-Regione"] = "Abruzzo",
+          },
+        })
+        -- validate that the request succeeded, response status 200
+        assert.response(r).has.status(200)
+        -- now check the request (as echoed by mockbin) to have the header
+        local header_value = assert.response(r).has.header("X-Upstream-Name")
+        -- validate the value of that header
+        assert.equal("italy_cluster", header_value)
+      end)
+
+      it("checks if request with {X-Country = Italy, X-Regione = Rome} matches rule with {X-Country = Italy, X-Regione = Rome}", function()
+        local r = assert(client:send {
+          method = "GET",
+          path = "/local",
+          headers = {
+            ["X-Country"] = "Italy",
+            ["X-Regione"] = "Rome",
+          },
+        })
+        -- validate that the request succeeded, response status 200
+        assert.response(r).has.status(200)
+        -- now check the request (as echoed by mockbin) to have the header
+        local header_value = assert.response(r).has.header("X-Upstream-Name")
+        -- validate the value of that header
+        assert.equal("rome_cluster", header_value)
+      end)
+    end)
+
+    it("checks if request with {X-Country = Brazil, X-Regione = Goiania} matches rule with {X-Country = Brazil, X-Regione = Goiania}", function()
+      local r = assert(client:send {
+        method = "GET",
+        path = "/local",
+        headers = {
+          ["X-Country"] = "Brazil",
+          ["X-Regione"] = "Goiania",
+        },
+      })
+      -- validate that the request succeeded, response status 200
+      assert.response(r).has.status(200)
+      -- now check the request (as echoed by mockbin) to have the header
+      local header_value = assert.response(r).has.header("X-Upstream-Name")
+      -- validate the value of that header
+      assert.equal("brazil_cluster", header_value)
+    end)
+
+    it("checks if request with {X-Country = Italy, Connection = close} matches rule with {X-Country = Italy, Connection = close}", function()
+      local r = assert(client:send {
+        method = "GET",
+        path = "/local",
+        headers = {
+          ["X-Country"] = "Italy",
+          ["Connection"] = "close",
+        },
+      })
+      -- validate that the request succeeded, response status 200
+      assert.response(r).has.status(200)
+      -- now check the request (as echoed by mockbin) to have the header
+      local header_value = assert.response(r).has.header("X-Upstream-Name")
+      -- validate the value of that header
+      assert.equal("italy_cache_cluster", header_value)
+    end)
+
+    it("checks if request with {Accept-Language = en-us} matches rule with {Accept-Language = en-us}", function()
+      local r = assert(client:send {
+        method = "GET",
+        path = "/local",
+        headers = {
+          ["Accept-Language"] = "en-us",
+        },
+      })
+      -- validate that the request succeeded, response status 200
+      assert.response(r).has.status(200)
+      -- now check the request (as echoed by mockbin) to have the header
+      local header_value = assert.response(r).has.header("X-Upstream-Name")
+      -- validate the value of that header
+      assert.equal("us_cluster", header_value)
     end)
 
   end)

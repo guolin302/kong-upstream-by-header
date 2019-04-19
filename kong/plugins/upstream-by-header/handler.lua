@@ -90,6 +90,7 @@ function plugin:access(plugin_conf)
 
   if upstream then
     kong.service.set_upstream(upstream)
+    kong.response.set_header("X-Upstream-Name", upstream)
   end
 end --]]
 
@@ -98,7 +99,6 @@ function plugin:header_filter(plugin_conf)
   plugin.super.header_filter(self)
 
   -- your custom code here, for example;
-  ngx.header["Bye-World"] = "this is on the response"
 end --]]
 
 --[[ runs in the 'body_filter_by_lua_block'

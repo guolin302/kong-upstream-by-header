@@ -11,7 +11,9 @@ for _, strategy in helpers.each_strategy() do
     local client
 
     lazy_setup(function()
-      local bp, route1
+      local bp
+      local upstream1
+      local service1
 
       if KONG_VERSION >= version("0.15.0") then
         --
@@ -19,27 +21,75 @@ for _, strategy in helpers.each_strategy() do
         --
         bp = helpers.get_db_utils(strategy, nil, { PLUGIN_NAME })
 
-        route1 = bp.routes:insert({
-          hosts = { "test1.com" },
+        upstream1 = bp.upstreams:insert({
+          name = "europe_cluster",
         })
+
+        bp.targets:insert({
+          upstream = upstream1,
+          target = "mockbin.org:80",
+        })
+
+        service1 = bp.services:insert({
+          name = "service1",
+          host = "europe_cluster",
+        })
+
+        bp.routes:insert({
+          paths = { "/local", },
+          service = service1,
+        })
+
         bp.plugins:insert {
           name = PLUGIN_NAME,
-          route = { id = route1.id },
-          config = {},
+          config = {
+            rules = {
+              {
+                headers = {
+                  ["X-Country"] = "Italy",
+                },
+                upstream_name = "europe_cluster",
+              },
+            },
+          },
         }
       else
         --
         -- Pre Kong version 0.15.0/1.0.0, older test helpers
         --
-        local bp = helpers.get_db_utils(strategy)
+        bp = helpers.get_db_utils(strategy)
 
-        local route1 = bp.routes:insert({
-          hosts = { "test1.com" },
+        upstream1 = bp.upstreams:insert({
+          name = "europe_cluster",
         })
+
+        bp.targets:insert({
+          upstream = upstream1,
+          target = "mockbin.org:80",
+        })
+
+        service1 = bp.services:insert({
+          name = "service1",
+          host = "europe_cluster",
+        })
+
+        bp.routes:insert({
+          paths = { "/local", },
+          service = service1,
+        })
+
         bp.plugins:insert {
           name = PLUGIN_NAME,
-          route_id = route1.id,
-          config = {},
+          config = {
+            rules = {
+              {
+                headers = {
+                  ["X-Country"] = "Italy",
+                },
+                upstream_name = "europe_cluster",
+              },
+            },
+          },
         }
       end
 
@@ -69,41 +119,41 @@ for _, strategy in helpers.each_strategy() do
 
 
 
-    describe("request", function()
-      it("gets a 'hello-world' header", function()
+    --describe("request", function()
+    --  it("gets a 'X-Upstream-Name' header", function()
+    --    local r = assert(client:send {
+    --      method = "GET",
+    --      path = "/local",
+    --      headers = {
+    --        ["X-Country"] = "Italy",
+    --      }
+    --    })
+    --    -- validate that the request succeeded, response status 200
+    --    assert.response(r).has.status(200)
+    --    -- now check the request (as echoed by mockbin) to have the header
+    --    local header_value = assert.request(r).has.header("X-Upstream-Name")
+    --    -- validate the value of that header
+    --    assert.equal("europe_cluster", header_value)
+    --  end)
+    --end)
+
+
+
+    describe("response", function()
+      it("gets the correct upstream name in the response header", function()
         local r = assert(client:send {
           method = "GET",
-          path = "/request",  -- makes mockbin return the entire request
+          path = "/local",
           headers = {
-            host = "test1.com"
+            ["X-Country"] = "Italy",
           }
         })
         -- validate that the request succeeded, response status 200
         assert.response(r).has.status(200)
         -- now check the request (as echoed by mockbin) to have the header
-        local header_value = assert.request(r).has.header("hello-world")
+        local header_value = assert.response(r).has.header("X-Upstream-Name")
         -- validate the value of that header
-        assert.equal("this is on a request", header_value)
-      end)
-    end)
-
-
-
-    describe("response", function()
-      it("gets a 'bye-world' header", function()
-        local r = assert(client:send {
-          method = "GET",
-          path = "/request",  -- makes mockbin return the entire request
-          headers = {
-            host = "test1.com"
-          }
-        })
-        -- validate that the request succeeded, response status 200
-        assert.response(r).has.status(200)
-        -- now check the response to have the header
-        local header_value = assert.response(r).has.header("bye-world")
-        -- validate the value of that header
-        assert.equal("this is on the response", header_value)
+        assert.equal("europe_cluster", header_value)
       end)
     end)
 

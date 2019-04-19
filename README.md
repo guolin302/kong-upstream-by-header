@@ -1,6 +1,8 @@
 Kong Plugin: upstream-by-header
 ====================
 
+[![Build Status](https://travis-ci.com/murillopaula/kong-upstream-by-header.svg?branch=master)](https://travis-ci.com/murillopaula/kong-upstream-by-header)
+
 This is a Kong plugin that proxies requests to different upstreams when the request headers match one of the configured headers.
 
 ## Usage

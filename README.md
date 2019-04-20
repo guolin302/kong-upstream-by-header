@@ -63,3 +63,7 @@ italy_cluster.
 ## TODO
 - We're exposing the upstream name in `X-Upstream-Name` to make integration testing easier; ideally such information should not be exposed to clients.
 - The time complexity for the header matching algorithm could potentially be optimzed with some hashing technique. Currently, it is O(r * h), where `r` is the number of rules and `h` is the number of headers for each rule.
+- Fix the Travis CI build. It is failing because this [0] bash script file used for installing Kong and its dependencies is preventing the build from passing. See [1] for details.
+
+[0] https://github.com/Kong/kong/blob/master/.ci/setup_env.sh
+[1] https://travis-ci.com/murillopaula/kong-upstream-by-header/jobs/194360194/

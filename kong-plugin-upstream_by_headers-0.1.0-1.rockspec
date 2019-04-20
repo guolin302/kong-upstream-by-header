@@ -1,4 +1,4 @@
-package = "kong-plugin-upstream_by_headers"  -- TODO: rename, must match the info in the filename of this rockspec!
+package = "kong-plugin-upstream-by-headers"  -- TODO: rename, must match the info in the filename of this rockspec!
                                   -- as a convention; stick to the prefix: `kong-plugin-`
 version = "0.1.0-1"               -- TODO: renumber, must match the info in the filename of this rockspec!
 -- The version '0.1.0' is the source code version, the trailing '1' is the version of this rockspec.

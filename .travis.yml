@@ -54,7 +54,7 @@ install:
   - cd kong-ce
   - make dev
   - createuser --createdb kong
-  - createdb -U kong
+  - createdb -U kong kong_tests
 
 script:
   - bin/busted spec/

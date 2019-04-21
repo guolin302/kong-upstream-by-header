@@ -54,7 +54,6 @@ install:
   - luarocks make
   - cd kong-ce
   - make dev
-  - cp -r ../spec/fixtures/prometheus spec/fixtures/
   - createuser --createdb kong
   - createdb -U kong kong_tests
 

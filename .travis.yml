@@ -36,7 +36,7 @@ env:
     - DOWNLOAD_CACHE=$HOME/download-cache
     - INSTALL_CACHE=$HOME/install-cache
     - BUSTED_ARGS="-o gtest -v --exclude-tags=flaky,ipv6"
-    - PLUGIN_NAME=prometheus
+    - PLUGIN_NAME=upstream-by-header
     - KONG_TEST_PLUGINS=bundled,$PLUGIN_NAME
     - KONG_PLUGINS=bundled,$PLUGIN_NAME
 
@@ -48,11 +48,9 @@ env:
 
 before_install:
   - git clone https://github.com/Kong/kong.git kong-ce
-  - cd kong-ce/
-  - sudo .ci/setup_env.sh
+  - source setup_env.sh
 
 install:
-  - cd ../
   - luarocks make
   - cd kong-ce
   - make dev

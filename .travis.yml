@@ -35,7 +35,6 @@ env:
     - OPENRESTY_LATEST=1.13.6.2
     - DOWNLOAD_CACHE=$HOME/download-cache
     - INSTALL_CACHE=$HOME/install-cache
-    - BUSTED_ARGS="-o gtest -v --exclude-tags=flaky,ipv6"
     - PLUGIN_NAME=upstream-by-header
     - KONG_TEST_PLUGINS=bundled,$PLUGIN_NAME
     - KONG_PLUGINS=bundled,$PLUGIN_NAME
@@ -55,10 +54,10 @@ install:
   - cd kong-ce
   - make dev
   - createuser --createdb kong
-  - createdb -U kong kong_tests
+  - createdb -U kong
 
 script:
-  - bin/busted $BUSTED_ARGS spec/
+  - bin/busted spec/
 
 cache:
   apt: true

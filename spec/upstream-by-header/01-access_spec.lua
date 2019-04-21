@@ -46,32 +46,32 @@ for _, strategy in helpers.each_strategy() do
 
         bp.targets:insert({
           upstream = upstream1,
-          target = "mockbin.org:80",
+          target = "0.0.0.0:9005",
         })
 
         bp.targets:insert({
           upstream = upstream2,
-          target = "httpbin.org:80",
+          target = "0.0.0.0:9006",
         })
 
         bp.targets:insert({
           upstream = upstream3,
-          target = "example.com:80",
+          target = "0.0.0.0:9007",
         })
 
         bp.targets:insert({
           upstream = upstream4,
-          target = "example.org:80",
+          target = "0.0.0.0:9008",
         })
 
         bp.targets:insert({
           upstream = upstream5,
-          target = "mockbin.org:80",
+          target = "0.0.0.0:9009",
         })
 
         bp.targets:insert({
           upstream = upstream6,
-          target = "mockbin.org:80",
+          target = "0.0.0.0:9010",
         })
 
         -- default: requests to service1 will be sent to europe_cluster

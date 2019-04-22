@@ -64,6 +64,9 @@ install:
   - docker run -d --name httpbin-9010 -p 9010:9000 shashiranjan84/httpbin
 
 script:
+  - cd ../
+  - luacheck . --exclude-files 'kong-ce/*'
+  - cd kong-ce/
   - bin/busted ../spec/
 
 cache:

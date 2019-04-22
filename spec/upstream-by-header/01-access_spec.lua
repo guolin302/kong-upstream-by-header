@@ -5,173 +5,145 @@ local version = require("version").version or require("version")
 local PLUGIN_NAME = "upstream-by-header"
 local KONG_VERSION = version(select(3, assert(helpers.kong_exec("version"))))
 
+local function prepare(bp)
+  local upstream1, upstream2, upstream3, upstream4, upstream5, upstream6
+  local service1
+
+  upstream1 = bp.upstreams:insert({
+    name = "europe_cluster",
+  })
+
+  upstream2 = bp.upstreams:insert({
+    name = "italy_cluster",
+  })
+
+  upstream3 = bp.upstreams:insert({
+    name = "rome_cluster",
+  })
+
+  upstream4 = bp.upstreams:insert({
+    name = "brazil_cluster",
+  })
+
+  upstream5 = bp.upstreams:insert({
+    name = "italy_cache_cluster",
+  })
+
+  upstream6 = bp.upstreams:insert({
+    name = "us_cluster",
+  })
+
+  bp.targets:insert({
+    upstream = upstream1,
+    target = "0.0.0.0:9005",
+  })
+
+  bp.targets:insert({
+    upstream = upstream2,
+    target = "0.0.0.0:9006",
+  })
+
+  bp.targets:insert({
+    upstream = upstream3,
+    target = "0.0.0.0:9007",
+  })
+
+  bp.targets:insert({
+    upstream = upstream4,
+    target = "0.0.0.0:9008",
+  })
+
+  bp.targets:insert({
+    upstream = upstream5,
+    target = "0.0.0.0:9009",
+  })
+
+  bp.targets:insert({
+    upstream = upstream6,
+    target = "0.0.0.0:9010",
+  })
+
+  -- default: requests to service1 will be sent to europe_cluster
+  service1 = bp.services:insert({
+    name = "service1",
+    host = "europe_cluster",
+    protocol = "http",
+  })
+
+  -- requests that match route "/local" will be proxied to europe_cluster
+  bp.routes:insert({
+    paths = { "/local", },
+    service = service1,
+  })
+
+  bp.plugins:insert {
+    name = PLUGIN_NAME,
+    config = {
+      rules = {
+        {
+          headers = {
+            ["X-Country"] = "Italy",
+          },
+          upstream_name = "europe_cluster",
+        },
+        {
+          headers = {
+            ["X-Country"] = "Italy",
+            ["X-Regione"] = "Abruzzo",
+          },
+          upstream_name = "italy_cluster",
+        },
+        {
+          headers = {
+            ["X-Country"] = "Italy",
+            ["X-Regione"] = "Rome",
+          },
+          upstream_name = "rome_cluster",
+        },
+        {
+          headers = {
+            ["X-Country"] = "Brazil",
+            ["X-Regione"] = "Goiania",
+          },
+          upstream_name = "brazil_cluster",
+        },
+        {
+          headers = {
+            ["X-Country"] = "Italy",
+            ["Connection"] = "close",
+          },
+          upstream_name = "italy_cache_cluster",
+        },
+        {
+          headers = {
+            ["Accept-Language"] = "en-us",
+          },
+          upstream_name = "us_cluster",
+        },
+      },
+    },
+  }
+end
 
 for _, strategy in helpers.each_strategy() do
   describe(PLUGIN_NAME .. ": (access) [#" .. strategy .. "]", function()
     local client
 
     lazy_setup(function()
-      local bp, service1
-      local upstream1, upstream2, upstream3, upstream4, upstream5, upstream6
+      local bp
 
       if KONG_VERSION >= version("0.15.0") then
         --
         -- Kong version 0.15.0/1.0.0, new test helpers
         --
         bp = helpers.get_db_utils(strategy, nil, { PLUGIN_NAME })
-
-        upstream1 = bp.upstreams:insert({
-          name = "europe_cluster",
-        })
-
-        upstream2 = bp.upstreams:insert({
-          name = "italy_cluster",
-        })
-
-        upstream3 = bp.upstreams:insert({
-          name = "rome_cluster",
-        })
-
-        upstream4 = bp.upstreams:insert({
-          name = "brazil_cluster",
-        })
-
-        upstream5 = bp.upstreams:insert({
-          name = "italy_cache_cluster",
-        })
-
-        upstream6 = bp.upstreams:insert({
-          name = "us_cluster",
-        })
-
-        bp.targets:insert({
-          upstream = upstream1,
-          target = "0.0.0.0:9005",
-        })
-
-        bp.targets:insert({
-          upstream = upstream2,
-          target = "0.0.0.0:9006",
-        })
-
-        bp.targets:insert({
-          upstream = upstream3,
-          target = "0.0.0.0:9007",
-        })
-
-        bp.targets:insert({
-          upstream = upstream4,
-          target = "0.0.0.0:9008",
-        })
-
-        bp.targets:insert({
-          upstream = upstream5,
-          target = "0.0.0.0:9009",
-        })
-
-        bp.targets:insert({
-          upstream = upstream6,
-          target = "0.0.0.0:9010",
-        })
-
-        -- default: requests to service1 will be sent to europe_cluster
-        service1 = bp.services:insert({
-          name = "service1",
-          host = "europe_cluster",
-          protocol = "http",
-        })
-
-        -- requests that match route "/local" will be proxied to europe_cluster
-        bp.routes:insert({
-          paths = { "/local", },
-          service = service1,
-        })
-
-        bp.plugins:insert {
-          name = PLUGIN_NAME,
-          config = {
-            rules = {
-              {
-                headers = {
-                  ["X-Country"] = "Italy",
-                },
-                upstream_name = "europe_cluster",
-              },
-              {
-                headers = {
-                  ["X-Country"] = "Italy",
-                  ["X-Regione"] = "Abruzzo",
-                },
-                upstream_name = "italy_cluster",
-              },
-              {
-                headers = {
-                  ["X-Country"] = "Italy",
-                  ["X-Regione"] = "Rome",
-                },
-                upstream_name = "rome_cluster",
-              },
-              {
-                headers = {
-                  ["X-Country"] = "Brazil",
-                  ["X-Regione"] = "Goiania",
-                },
-                upstream_name = "brazil_cluster",
-              },
-              {
-                headers = {
-                  ["X-Country"] = "Italy",
-                  ["Connection"] = "close",
-                },
-                upstream_name = "italy_cache_cluster",
-              },
-              {
-                headers = {
-                  ["Accept-Language"] = "en-us",
-                },
-                upstream_name = "us_cluster",
-              },
-            },
-          },
-        }
+        prepare(bp)
       else
         --
         -- Pre Kong version 0.15.0/1.0.0, older test helpers
         --
         bp = helpers.get_db_utils(strategy)
-
-        upstream1 = bp.upstreams:insert({
-          name = "europe_cluster",
-        })
-
-        bp.targets:insert({
-          upstream = upstream1,
-          target = "mockbin.org:80",
-        })
-
-        service1 = bp.services:insert({
-          name = "service1",
-          host = "europe_cluster",
-        })
-
-        bp.routes:insert({
-          paths = { "/local", },
-          service = service1,
-        })
-
-        bp.plugins:insert {
-          name = PLUGIN_NAME,
-          config = {
-            rules = {
-              {
-                headers = {
-                  ["X-Country"] = "Italy",
-                },
-                upstream_name = "europe_cluster",
-              },
-            },
-          },
-        }
+        prepare(bp)
       end
 
       -- start kong

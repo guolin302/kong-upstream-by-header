@@ -29,33 +29,49 @@ We'll illustrate the plugin's functionality by creating four different upstreams
 
 Let's create the four upstreams and their associated targets. We'll use [Mockbin](http://mockbin.org/) as mock HTTP servers to provide upstream responses.
 
+`default_cluster` upstream:
+
 ```bash
 $ http :8001/upstreams name=default_cluster
 ```
+
+`default_cluster` upstream target:
 
 ```bash
 $ http :8001/upstreams/default_cluster/targets target=mockbin.org:80
 ```
 
+`europe_cluster` upstream:
+
 ```bash
 $ http :8001/upstreams name=europe_cluster
 ```
+
+`europe_cluster` upstream target:
 
 ```bash
 $ http :8001/upstreams/europe_cluster/targets target=mockbin.org:80
 ```
 
+`italy_cluster` upstream:
+
 ```bash
 $ http :8001/upstreams name=italy_cluster
 ```
+
+`italy_cluster` upstream target:
 
 ```bash
 $ http :8001/upstreams/italy_cluster/targets target=mockbin.org:80
 ```
 
+`rome_cluster` upstream:
+
 ```bash
 $ http :8001/upstreams name=rome_cluster
 ```
+
+`rome_cluster` upstream target:
 
 ```bash
 $ http :8001/upstreams/rome_cluster/targets target=mockbin.org:80

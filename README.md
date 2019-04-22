@@ -12,7 +12,7 @@ upstream-by-header sends a request to a different upstream if its headers match 
 | parameter | description |
 | --- | --- |
 | `headers` |  List of (name, value) pairs |
-| `upstream_name` |  Upstream hostname where the request will be sent to if the request headers match one of the `headers` |
+| `upstream_name` |  Upstream hostname where the request will be sent to if the request headers match one of the configured `headers` |
 
 The first match between the headers of a request and the headers of a rule will make the plugin route the request to the `upstream_name` configured for this rule. The plugin considers a match to happen when all the headers for a configured rule are contained in the request headers.
 
@@ -107,9 +107,9 @@ Which is exactly what we wanted to do!
 
 ## TODO
 - We're exposing the upstream name in `X-Upstream-Name` to make integration testing easier; ideally such information should not be exposed to clients.
-- The time complexity for the header matching algorithm could potentially be optimzed with some hashing technique. Currently, it is O(r * h), where `r` is the number of rules and `h` is the number of headers for each rule.
-- Fix the Travis CI build. It is failing because this [0] bash script file used for installing Kong and its dependencies is preventing the build from passing. See [1] for details.
+- Currently, the worst-case running time complexity of the header matching algorithm is O(R * H), where `R` is the number of configured rules and `H` is the number of headers for each rule. One improvement would be to research and implement some hash matching algorithm, which could improve the worst-case running time of the header matching algorithm.
+- We are hooking up Travis CI to run the plugin's unit and integration tests with the help of the `setup_env.sh` shell script, which is used in the 0.15.0 version of Kong [0]. This script allows us to set up our Kong development environment, but ideally it should not reside in this repository.
+- In the future, we should be able to find an easier way to install the Kong development environment to develop our plugin. One idea is to use `kong-build-tools`, which uses Docker and docker-compose [1].
 
-[0] https://github.com/Kong/kong/blob/master/.ci/setup_env.sh
-
-[1] https://travis-ci.com/murillopaula/kong-upstream-by-header/jobs/194360194/
+[0] https://github.com/Kong/kong/blob/0.15.0/.ci/setup_env.sh
+[1] https://github.com/Kong/kong-build-tools#developing-kong

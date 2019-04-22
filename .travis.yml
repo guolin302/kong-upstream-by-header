@@ -1,4 +1,3 @@
-
 dist: trusty
 sudo: required
 
@@ -31,6 +30,7 @@ env:
     - OPENSSL=1.1.1a
     - CASSANDRA_BASE=2.2.12
     - CASSANDRA_LATEST=3.9
+    - KONG_TEST_DATABASE=cassandra
     - OPENRESTY_BASE=1.13.6.2
     - OPENRESTY_LATEST=1.13.6.2
     - DOWNLOAD_CACHE=$HOME/download-cache
@@ -55,6 +55,13 @@ install:
   - make dev
   - createuser --createdb kong
   - createdb -U kong kong_tests
+  - docker run -d --name httpbin-9004 -p 9004:9000 shashiranjan84/httpbin
+  - docker run -d --name httpbin-9005 -p 9005:9000 shashiranjan84/httpbin
+  - docker run -d --name httpbin-9006 -p 9006:9000 shashiranjan84/httpbin
+  - docker run -d --name httpbin-9007 -p 9007:9000 shashiranjan84/httpbin
+  - docker run -d --name httpbin-9008 -p 9008:9000 shashiranjan84/httpbin
+  - docker run -d --name httpbin-9009 -p 9009:9000 shashiranjan84/httpbin
+  - docker run -d --name httpbin-9010 -p 9010:9000 shashiranjan84/httpbin
 
 script:
   - bin/busted ../spec/
